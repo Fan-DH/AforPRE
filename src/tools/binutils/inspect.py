@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import os
 import re
 
+from contracts.results import UNSUPPORTED_FORMAT
 from tools.base import ProviderError
 
 
@@ -24,18 +24,23 @@ def parse_header(header: str) -> dict:
 def parse_sections(objdump_h: str) -> list[dict]:
     """从 objdump -h 输出解析节表：name / size / vma / file_offset。"""
     sections = []
-    for line in objdump_h.splitlines():
+    lines = objdump_h.splitlines()
+    for index, line in enumerate(lines):
         parts = line.split()
         # 形如: ['12', '.rodata', '00000013', '0000000000002000',
         #        '0000000000002000', '00002000', '2**2']
         if len(parts) < 7 or not parts[0].isdigit():
             continue
         try:
+            flags = lines[index + 1] if index + 1 < len(lines) else ""
             sections.append({
                 "name": parts[1],
                 "size": int(parts[2], 16),
                 "vma": int(parts[3], 16),
                 "file_offset": int(parts[5], 16),
+                "allocated": "ALLOC" in flags,
+                "executable": "CODE" in flags,
+                "has_contents": "CONTENTS" in flags,
             })
         except (ValueError, IndexError):
             continue
@@ -43,16 +48,11 @@ def parse_sections(objdump_h: str) -> list[dict]:
 
 
 def inspect_target(provider, args: dict) -> dict:
-    target_path = args["target_path"]
-    path = os.path.abspath(target_path)
-    if not os.path.isfile(path):
-        raise ProviderError(f"目标不存在或不是文件: {target_path}")
-
-    try:
-        header = provider._run(["readelf", "-h", path])
-    except ProviderError as exc:
-        return {"path": path, "is_elf": False,
-                "error": f"readelf 无法解析，可能不是 ELF 文件: {exc}"}
+    path = provider.target_path(args)
+    with open(path, "rb") as fh:
+        if fh.read(4) != b"\x7fELF":
+            raise ProviderError(f"目标不是 ELF 文件: {path}", UNSUPPORTED_FORMAT)
+    header = provider._run(["readelf", "-h", path])
 
     sections_text = provider._run(["objdump", "-h", path])
     info = parse_header(header)

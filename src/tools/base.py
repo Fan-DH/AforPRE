@@ -5,5 +5,20 @@
 """
 
 
+from contracts.results import ERROR
+
+
 class ProviderError(Exception):
-    """工具执行失败（非零退出、超时、缺失工具等）。"""
+    """工具执行失败，保留可供入口报告的结果状态。"""
+
+    def __init__(self, message: str, status: str = ERROR, *,
+                 limitations: list[str] | None = None,
+                 diagnostics: list[dict] | None = None, data=None):
+        super().__init__(message)
+        self.status = status
+        self.limitations = list(limitations or [f"工具操作未完成：{message}"])
+        self.diagnostics = list(diagnostics or [
+            {"code": "provider_error", "severity": "error", "message": message,
+             "details": {}, "suggestions": []},
+        ])
+        self.data = data

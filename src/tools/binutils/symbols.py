@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import os
 import re
 
 
 def list_symbols(provider, args: dict) -> dict:
-    path = os.path.abspath(args["target_path"])
+    path = provider.target_path(args)
     raw = provider._run(["nm", "-n", "--defined-only", path])
 
     symbols = []

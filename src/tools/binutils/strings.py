@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-import os
 import re
 
 
 def search_strings(provider, args: dict) -> dict:
-    target_path = args["target_path"]
-    path = os.path.abspath(target_path)
+    path = provider.target_path(args)
     pattern = args.get("pattern")
-    min_length = args.get("min_length") or provider.config.min_string_len
+    min_length = args.get("min_length", provider.config.min_string_len)
+    rx = re.compile(pattern, re.IGNORECASE) if pattern else None
 
     raw = provider._run(["strings", "-a", "-t", "x", "-n", str(min_length), path])
 
@@ -25,8 +24,7 @@ def search_strings(provider, args: dict) -> dict:
         })
 
     matched = all_strings
-    if pattern:
-        rx = re.compile(pattern, re.IGNORECASE)
+    if rx is not None:
         matched = [s for s in all_strings if rx.search(s["text"])]
 
     return {"total": len(all_strings), "matched": matched, "count": len(matched)}

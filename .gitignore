@@ -3,15 +3,12 @@
 venv/
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
 build/
 dist/
 
-# 运行时工作目录（记录与调用日志）
-work/
-
-# 编译产物（测试样本的 ELF，源码见 tests/samples/demo.c）
-tests/samples/demo
-
 # 暂时不开
+work/
 README.md
+.external/

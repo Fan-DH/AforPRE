@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import json
 import os
-import time
+import uuid
+import fcntl
 from dataclasses import dataclass
 
 from contracts.record import Record
@@ -23,7 +24,12 @@ class RecordStore:
     def _append(self, filename: str, record: dict) -> None:
         path = os.path.join(self.workspace, filename)
         with open(path, "a", encoding="utf-8") as fh:
-            fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+            fcntl.flock(fh, fcntl.LOCK_EX)
+            try:
+                fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+                fh.flush()
+            finally:
+                fcntl.flock(fh, fcntl.LOCK_UN)
 
     def record(self, record: Record) -> str:
         """写入一条记录并返回其 id。"""
@@ -36,4 +42,4 @@ class RecordStore:
 
     @staticmethod
     def new_id() -> str:
-        return f"rec-{int(time.time() * 1000)}-{os.getpid()}"
+        return f"rec-{uuid.uuid4().hex}"

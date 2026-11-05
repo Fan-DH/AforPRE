@@ -21,6 +21,8 @@ class ToolResult:
     data: Any = None
     error: str | None = None
     limitations: list[str] = field(default_factory=list)
+    record_id: str | None = None
+    diagnostics: list[dict] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return asdict(self)

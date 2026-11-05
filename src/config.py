@@ -15,22 +15,16 @@ class Config:
     workspace: str
     timeout: int          # 单次外部工具调用的超时秒数
     min_string_len: int   # strings 工具的最小长度阈值
-    flag_pattern: str     # 默认的 flag 关键词正则
-
-    def ensure_workspace(self) -> None:
-        os.makedirs(self.workspace, exist_ok=True)
 
 
 def load_config() -> Config:
     workspace = os.environ.get("APRE_WORKSPACE") or str(Path.cwd() / "work")
     timeout = int(os.environ.get("APRE_TIMEOUT") or "30")
     min_string_len = int(os.environ.get("APRE_MIN_STRING_LEN") or "4")
-    flag_pattern = os.environ.get("APRE_FLAG_PATTERN") or r"flag\{"
     cfg = Config(
         workspace=workspace,
         timeout=timeout,
         min_string_len=min_string_len,
-        flag_pattern=flag_pattern,
     )
     validate_config(cfg)
     return cfg
@@ -42,5 +36,5 @@ def validate_config(cfg: Config) -> None:
         raise ValueError(f"APRE_TIMEOUT 必须为正数，得到 {cfg.timeout}")
     if cfg.min_string_len <= 0:
         raise ValueError(f"APRE_MIN_STRING_LEN 必须为正数，得到 {cfg.min_string_len}")
-    if not cfg.flag_pattern:
-        raise ValueError("APRE_FLAG_PATTERN 不能为空")
+    if not cfg.workspace:
+        raise ValueError("APRE_WORKSPACE 不能为空")
