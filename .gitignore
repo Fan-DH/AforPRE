@@ -8,7 +8,6 @@ __pycache__/
 build/
 dist/
 
-# 暂时不开
+# 不开
 work/
-README.md
 .external/

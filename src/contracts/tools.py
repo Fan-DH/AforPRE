@@ -796,6 +796,9 @@ TOOL_CONTRACTS.extend([
             'replace_existing': {'type': 'boolean'}}, 'required': ['target_path', 'address', 'length']}),
 ])
 
+from contracts.track import contracts as _track_contracts
+TOOL_CONTRACTS.extend(_track_contracts(ToolContract))
+
 # Keep constraints next to the tool list so CLI and MCP share one contract.
 _FUNCTION_SELECTORS = {
     "ghidra_decompile", "ghidra_xrefs_from", "ghidra_get_cfg",
@@ -807,9 +810,9 @@ for _contract in TOOL_CONTRACTS:
     _schema["additionalProperties"] = False
     for _key, _spec in _schema["properties"].items():
         if _spec["type"] == "string" and _key not in {"pattern", "comment"}:
-            _spec["minLength"] = 1
+            _spec.setdefault("minLength", 1)
         if _spec["type"] == "integer":
-            _spec["minimum"] = 1
+            _spec.setdefault("minimum", 1)
     if _contract.name in _FUNCTION_SELECTORS:
         _schema["anyOf"] = [
             {"required": ["address"]}, {"required": ["name"]},
